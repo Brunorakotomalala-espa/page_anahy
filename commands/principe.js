@@ -17,32 +17,29 @@ module.exports = {
 
     onStart: async function (userId, prompt, sendResponse) {
         try {
-            // Vérifier si le prompt est une image
             const isImage = prompt.startsWith("image:");
             if (isImage) {
                 const imageUrl = prompt.split("image:")[1].trim();
-                
-                // Réponse immédiate
-                const immediateResponse = "✨ Photo reçue avec succès ! ✨\nL'image montre une capture d'écran d'un téléphone portable. L'écran affiche un message de félicitations pour avoir gagné 1 Go. Le message est accompagné d'un trophée et de confettis. En dessous, il y a deux boutons: 'Réclamez maintenant' et 'Partager'. La barre supérieure du téléphone affiche l'heure, la force du signal et le pourcentage de batterie. Le titre de l'application est 'Jouez et Gagnez'.";
+                const immediateResponse = "✨ Photo reçue avec succès ! ✨\nL'image montre une capture d'écran d'un téléphone portable. ..."; // Détails de l'image
                 sendResponse(immediateResponse);
                 
-                // Enregistrer l'historique de la conversation
+                // Mettez à jour l'historique de la conversation
                 conversationHistory[userId] = conversationHistory[userId] || [];
                 conversationHistory[userId].push({ prompt: "Image reçue", link: imageUrl });
 
-                // Traiter l'image avec l'API
+                // Traitez l'image avec l'API
                 const response = await axios.post(`https://gemini-ap-espa-bruno.onrender.com/api/gemini`, {
                     prompt: "Traite l'image",
                     customId: userId,
                     link: imageUrl
                 });
 
-                // Ajouter la réponse de l'API à l'historique
+                // Ajoutez la réponse de l'API à l'historique
                 conversationHistory[userId].push({ response: response.data.message });
                 return;
             }
 
-            // Gestion du prompt normal
+            // Gestion des prompts normaux
             const encodedPrompt = encodeURIComponent(prompt);
             const apiUrl = `https://gemini-ap-espa-bruno.onrender.com/api/gemini?ask=${encodedPrompt}`;
 
