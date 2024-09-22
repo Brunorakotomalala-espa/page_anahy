@@ -55,6 +55,10 @@ module.exports = {
         }
     },
 
+    onStart: async function ({ senderID, api }) {
+        // Logique à ajouter ultérieurement
+    },
+
     onChat: async function ({ event, api }) {
         const message = event.body?.toLowerCase();
         const senderID = event.senderID;
