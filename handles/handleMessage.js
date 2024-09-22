@@ -13,7 +13,7 @@ for (const file of commandFiles) {
 // Objet pour garder une trace des utilisateurs et de leur commande active
 const userSessions = {};
 
-module.exports = function handleMessage(sender_psid, received_message, callSendAPI) {
+module.exports = function handleMessage(sender_psid, received_message, callSendAPI, api) {
     if (received_message.text) {
         const messageText = received_message.text.toLowerCase();
 
@@ -26,7 +26,7 @@ module.exports = function handleMessage(sender_psid, received_message, callSendA
                 // Traiter le message avec la commande active
                 command.onStart(sender_psid, messageText, (responseText) => {
                     callSendAPI(sender_psid, { text: responseText });
-                });
+                }, api); // Transmettre api ici
             } else {
                 callSendAPI(sender_psid, { text: "Commande active non reconnue." });
             }
@@ -39,7 +39,7 @@ module.exports = function handleMessage(sender_psid, received_message, callSendA
                 userSessions[sender_psid] = commandName; // Enregistrer la commande active
                 command.onStart(sender_psid, args.join(' '), (responseText) => {
                     callSendAPI(sender_psid, { text: responseText });
-                });
+                }, api); // Transmettre api ici
             } else {
                 // Vérifier si l'utilisateur demande une réinitialisation
                 if (messageText === 'reset') {
@@ -48,20 +48,6 @@ module.exports = function handleMessage(sender_psid, received_message, callSendA
                 } else {
                     callSendAPI(sender_psid, { text: `La commande "${commandName}" n'existe pas. Essayez une commande valide.` });
                 }
-            }
-        }
-
-        // Vérifier si une commande a la fonction onChat
-        for (const command of Object.values(commands)) {
-            if (command.onChat) {
-                command.onChat({ event: { body: messageText, senderID: sender_psid, attachments: received_message.attachments }, api: callSendAPI });
-            }
-        }
-    } else if (received_message.attachments) {
-        // Gérer les messages avec des pièces jointes (comme des images)
-        for (const command of Object.values(commands)) {
-            if (command.onChat) {
-                command.onChat({ event: { attachments: received_message.attachments, senderID: sender_psid }, api: callSendAPI });
             }
         }
     }
