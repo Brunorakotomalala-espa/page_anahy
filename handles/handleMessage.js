@@ -42,32 +42,22 @@ module.exports = function handleMessage(sender_psid, received_message, callSendA
                     callSendAPI(sender_psid, { text: responseText });
                 });
             } else {
-                // Vérifier si l'utilisateur demande une réinitialisation
-                if (messageText === 'reset') {
-                    delete userSessions[sender_psid]; // Réinitialiser la session de l'utilisateur
-                    callSendAPI(sender_psid, { text: "Commande réinitialisée. Veuillez entrer une nouvelle commande." });
-                } else {
-                    callSendAPI(sender_psid, { text: `La commande "${commandName}" n'existe pas. Essayez une commande valide.` });
-                }
+                callSendAPI(sender_psid, { text: `La commande "${commandName}" n'existe pas. Essayez une commande valide.` });
             }
         }
     } else if (received_message.attachments) {
         // Vérifier si un message avec une image a été reçu
         const attachmentUrl = received_message.attachments[0].payload.url;
+        const activeCommand = 'principe'; // Utiliser la commande par défaut
 
-        // Vérifier si l'utilisateur a une session active
-        if (userSessions[sender_psid]) {
-            const activeCommand = userSessions[sender_psid];
-            const command = commands[activeCommand];
+        userSessions[sender_psid] = activeCommand; // Enregistrer la commande active
+        const command = commands[activeCommand];
 
-            if (command) {
-                // Traiter l'image avec la commande active
-                command.onStart(sender_psid, `image:${attachmentUrl}`, (responseText) => {
-                    callSendAPI(sender_psid, { text: responseText });
-                });
-            }
-        } else {
-            callSendAPI(sender_psid, { text: "Veuillez commencer une commande avant d'envoyer une image." });
+        if (command) {
+            // Traiter l'image avec la commande active
+            command.onStart(sender_psid, `image:${attachmentUrl}`, (responseText) => {
+                callSendAPI(sender_psid, { text: responseText });
+            });
         }
     }
 };
