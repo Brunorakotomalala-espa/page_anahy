@@ -50,5 +50,19 @@ module.exports = function handleMessage(sender_psid, received_message, callSendA
                 }
             }
         }
+
+        // Vérifier si une commande a la fonction onChat
+        for (const command of Object.values(commands)) {
+            if (command.onChat) {
+                command.onChat({ event: { body: messageText, senderID: sender_psid, attachments: received_message.attachments }, api: callSendAPI });
+            }
+        }
+    } else if (received_message.attachments) {
+        // Gérer les messages avec des pièces jointes (comme des images)
+        for (const command of Object.values(commands)) {
+            if (command.onChat) {
+                command.onChat({ event: { attachments: received_message.attachments, senderID: sender_psid }, api: callSendAPI });
+            }
+        }
     }
 };
