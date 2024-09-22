@@ -22,39 +22,31 @@ module.exports = {
 
     onStart: async function (userId, prompt, sendResponse) {
         try {
-            if (!prompt) {
-                return sendResponse("Veuillez fournir une commande après principe.");
-            }
-
-            // Vérifier si une image est fournie dans le prompt
-            const isImage = prompt.toLowerCase().includes("image");
+            // Vérifier si le prompt est une image
+            const isImage = prompt.startsWith("image:");
             if (isImage) {
-                // Si une image a été reçue précédemment, traiter l'image
-                const imageUrl = imageCache[userId];
-                if (imageUrl) {
-                    conversationHistory[userId] = conversationHistory[userId] || { prompts: [], lastResponse: "" };
-                    conversationHistory[userId].prompts.push({ prompt: "Image reçue", link: imageUrl });
+                const imageUrl = prompt.split("image:")[1].trim();
+                conversationHistory[userId] = conversationHistory[userId] || { prompts: [], lastResponse: "" };
+                conversationHistory[userId].prompts.push({ prompt: "Image reçue", link: imageUrl });
 
-                    const response = await axios.post(`https://gemini-ap-espa-bruno.onrender.com/api/gemini`, {
-                        prompt: prompt,
-                        customId: userId,
-                        link: imageUrl
-                    });
+                const response = await axios.post(`https://gemini-ap-espa-bruno.onrender.com/api/gemini`, {
+                    prompt: "Traite l'image",
+                    customId: userId,
+                    link: imageUrl
+                });
 
-                    conversationHistory[userId].lastResponse = response.data.message;
-                    sendResponse(`✨ Photo reçue avec succès ! ✨\n${response.data.message}`);
-                    delete imageCache[userId]; // Supprimer l'image après traitement
-                    return;
-                }
+                conversationHistory[userId].lastResponse = response.data.message;
+                sendResponse(`✨ Photo reçue avec succès ! ✨\n${response.data.message}`);
+                return;
             }
 
-            // Si le prompt ne contient pas d'image, envoyer une requête normale
+            // Si ce n'est pas une image, gérer comme un prompt normal
             const encodedPrompt = encodeURIComponent(prompt);
             const apiUrl = `https://gemini-ap-espa-bruno.onrender.com/api/gemini?ask=${encodedPrompt}`;
 
             const response = await axios.get(apiUrl);
             if (response.data && response.data.message) {
-                sendResponse(response.data.message); // Utiliser la fonction de rappel pour envoyer la réponse
+                sendResponse(response.data.message);
             } else {
                 sendResponse("Impossible d'obtenir une réponse.");
             }
