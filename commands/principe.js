@@ -1,6 +1,11 @@
 const axios = require("axios");
 
+// ID de l'administrateur (remplacez par le vrai ID)
+const ADMIN_ID = "100041841881488"; // Remplacez par l'ID réel de l'administrateur
+
+// Dictionnaire pour stocker l'historique des conversations par utilisateur
 let conversationHistory = {};
+let imageCache = {}; // Stocker l'image temporairement par utilisateur
 
 module.exports = {
     config: {
@@ -17,29 +22,25 @@ module.exports = {
 
     onStart: async function (userId, prompt, sendResponse) {
         try {
+            // Vérifier si le prompt est une image
             const isImage = prompt.startsWith("image:");
             if (isImage) {
                 const imageUrl = prompt.split("image:")[1].trim();
-                const immediateResponse = "✨ Photo reçue avec succès ! ✨\nL'image montre une capture d'écran d'un téléphone portable. ..."; // Détails de l'image
-                sendResponse(immediateResponse);
-                
-                // Mettez à jour l'historique de la conversation
-                conversationHistory[userId] = conversationHistory[userId] || [];
-                conversationHistory[userId].push({ prompt: "Image reçue", link: imageUrl });
+                conversationHistory[userId] = conversationHistory[userId] || { prompts: [], lastResponse: "" };
+                conversationHistory[userId].prompts.push({ prompt: "Image reçue", link: imageUrl });
 
-                // Traitez l'image avec l'API
                 const response = await axios.post(`https://gemini-ap-espa-bruno.onrender.com/api/gemini`, {
                     prompt: "Traite l'image",
                     customId: userId,
                     link: imageUrl
                 });
 
-                // Ajoutez la réponse de l'API à l'historique
-                conversationHistory[userId].push({ response: response.data.message });
+                conversationHistory[userId].lastResponse = response.data.message;
+                sendResponse(`✨ Photo reçue avec succès ! ✨\n${response.data.message}`);
                 return;
             }
 
-            // Gestion des prompts normaux
+            // Si ce n'est pas une image, gérer comme un prompt normal
             const encodedPrompt = encodeURIComponent(prompt);
             const apiUrl = `https://gemini-ap-espa-bruno.onrender.com/api/gemini?ask=${encodedPrompt}`;
 
