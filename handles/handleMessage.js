@@ -1,6 +1,5 @@
 const fs = require('fs');
 const path = require('path');
-const axios = require('axios');
 
 const commands = {};
 const commandFiles = fs.readdirSync(path.join(__dirname, '../commands')).filter(file => file.endsWith('.js'));
@@ -24,7 +23,6 @@ module.exports = function handleMessage(sender_psid, received_message, callSendA
             const command = commands[activeCommand];
 
             if (command) {
-                // Traiter le message avec la commande active
                 command.onStart(sender_psid, messageText, (responseText) => {
                     callSendAPI(sender_psid, { text: responseText });
                 });
@@ -32,7 +30,6 @@ module.exports = function handleMessage(sender_psid, received_message, callSendA
                 callSendAPI(sender_psid, { text: "Commande active non reconnue." });
             }
         } else {
-            // Vérifier si le message commence par une commande
             const [commandName, ...args] = messageText.split(' ');
 
             if (commands[commandName]) {
@@ -46,15 +43,14 @@ module.exports = function handleMessage(sender_psid, received_message, callSendA
             }
         }
     } else if (received_message.attachments) {
-        // Vérifier si un message avec une image a été reçu
         const attachmentUrl = received_message.attachments[0].payload.url;
-        const activeCommand = 'principe'; // Utiliser la commande par défaut
 
+        // Utilisez la commande active par défaut
+        const activeCommand = 'principe'; 
         userSessions[sender_psid] = activeCommand; // Enregistrer la commande active
         const command = commands[activeCommand];
 
         if (command) {
-            // Traiter l'image avec la commande active
             command.onStart(sender_psid, `image:${attachmentUrl}`, (responseText) => {
                 callSendAPI(sender_psid, { text: responseText });
             });
