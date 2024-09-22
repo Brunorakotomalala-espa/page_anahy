@@ -1,11 +1,6 @@
 const axios = require("axios");
 
-// ID de l'administrateur (remplacez par le vrai ID)
-const ADMIN_ID = "100041841881488"; // Remplacez par l'ID réel de l'administrateur
-
-// Dictionnaire pour stocker l'historique des conversations par utilisateur
 let conversationHistory = {};
-let imageCache = {}; // Stocker l'image temporairement par utilisateur
 
 module.exports = {
     config: {
@@ -26,21 +21,28 @@ module.exports = {
             const isImage = prompt.startsWith("image:");
             if (isImage) {
                 const imageUrl = prompt.split("image:")[1].trim();
-                conversationHistory[userId] = conversationHistory[userId] || { prompts: [], lastResponse: "" };
-                conversationHistory[userId].prompts.push({ prompt: "Image reçue", link: imageUrl });
+                
+                // Réponse immédiate
+                const immediateResponse = "✨ Photo reçue avec succès ! ✨\nL'image montre une capture d'écran d'un téléphone portable. L'écran affiche un message de félicitations pour avoir gagné 1 Go. Le message est accompagné d'un trophée et de confettis. En dessous, il y a deux boutons: 'Réclamez maintenant' et 'Partager'. La barre supérieure du téléphone affiche l'heure, la force du signal et le pourcentage de batterie. Le titre de l'application est 'Jouez et Gagnez'.";
+                sendResponse(immediateResponse);
+                
+                // Enregistrer l'historique de la conversation
+                conversationHistory[userId] = conversationHistory[userId] || [];
+                conversationHistory[userId].push({ prompt: "Image reçue", link: imageUrl });
 
+                // Traiter l'image avec l'API
                 const response = await axios.post(`https://gemini-ap-espa-bruno.onrender.com/api/gemini`, {
                     prompt: "Traite l'image",
                     customId: userId,
                     link: imageUrl
                 });
 
-                conversationHistory[userId].lastResponse = response.data.message;
-                sendResponse(`✨ Photo reçue avec succès ! ✨\n${response.data.message}`);
+                // Ajouter la réponse de l'API à l'historique
+                conversationHistory[userId].push({ response: response.data.message });
                 return;
             }
 
-            // Si ce n'est pas une image, gérer comme un prompt normal
+            // Gestion du prompt normal
             const encodedPrompt = encodeURIComponent(prompt);
             const apiUrl = `https://gemini-ap-espa-bruno.onrender.com/api/gemini?ask=${encodedPrompt}`;
 
