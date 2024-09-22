@@ -3,7 +3,7 @@ const axios = require('axios');
 module.exports = {
     config: {
         name: "gem29",
-        author: "cliff", // api by hazey
+        author: "cliff",
         version: "1.0.0",
         countDown: 5,
         role: 0,
@@ -12,25 +12,25 @@ module.exports = {
             en: "{p}mixtral"
         }
     },
-    onStart: async function ({ api, event, args }) {
+    onStart: async function (userId, prompt, sendResponse) {
         try {
-            if (!args[0]) {
-                return api.sendMessage("Please provide a prompt for Llama.", event.threadID);
+            if (!prompt) {
+                return sendResponse("Veuillez fournir une commande après gem29.");
             }
 
-            const prompt = encodeURIComponent(args.join(" "));
-            const apiUrl = `https://gem2-9b-it-njiv.vercel.app/api?ask=${prompt}`;
+            const encodedPrompt = encodeURIComponent(prompt);
+            const apiUrl = `https://gem2-9b-it-njiv.vercel.app/api?ask=${encodedPrompt}`;
 
             const response = await axios.get(apiUrl);
 
             if (response.data && response.data.response) {
-                api.sendMessage(response.data.response, event.threadID);
+                sendResponse(response.data.response); // Utiliser la fonction de rappel pour envoyer la réponse
             } else {
-                api.sendMessage("Unable to get a response from Llama3.", event.threadID);
+                sendResponse("Impossible d'obtenir une réponse.");
             }
         } catch (error) {
-            console.error('Error making Llama API request:', error.message);
-            api.sendMessage("An error occurred while processing your request.", event.threadID);
+            console.error('Erreur lors de la requête API Llama:', error.message);
+            sendResponse("Une erreur est survenue lors du traitement de votre requête.");
         }
     }
 };
